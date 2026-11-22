@@ -26,10 +26,24 @@ scripts/install-dependencies.sh
 
 The Cloudflare R2 bucket details and API key need to be available in the environment:
 
-- `SNAPSHOTS_BUCKET_ENDPOINT_URL` – endpoint URL
-- `SNAPSHOTS_BUCKET_NAME` – bucket name
-- `SNAPSHOTS_BUCKET_ACCESS_KEY_ID` – access key id
-- `SNAPSHOTS_BUCKET_SECRET_ACCESS_KEY` – secret access key
+- **Creating and/or Downloading Snapshots**
+  - `SNAPSHOTS_BUCKET_ENDPOINT_URL` – snapshots bucket endpoint URL
+  - `SNAPSHOTS_BUCKET_NAME` – snapshots bucket name
+  - `SNAPSHOTS_BUCKET_ACCESS_KEY_ID` – snapshots bucket access key id
+  - `SNAPSHOTS_BUCKET_SECRET_ACCESS_KEY` – snapshots bucket access key
+- **Deploying**
+  - `WEBSITE_BUCKET_ENDPOINT_URL` – website bucket endpoint URL
+  - `WEBSITE_BUCKET_NAME` – website bucket name
+  - `WEBSITE_BUCKET_ACCESS_KEY_ID` – website bucket access key id
+  - `WEBSITE_BUCKET_SECRECT_ACCESS_KEY` – website bucket access key
+  - `CLOUDFLARE_API_TOKEN` – Cloudflare API token with permissions for deploying Workers
+    - Required permission policies:
+      - Entire Psion Community account
+        - Workers Tail Read
+        - Workers Scripts Write
+        - Account Settings Read
+      - psion.community
+        - Workers Routes Write
 
 > [!IMPORTANT]
 >
@@ -42,6 +56,12 @@ export SNAPSHOTS_BUCKET_ENDPOINT_URL="..."
 export SNAPSHOTS_BUCKET_NAME="..."
 export SNAPSHOTS_BUCKET_ACCESS_KEY_ID="..."
 export SNAPSHOTS_BUCKET_SECRET_ACCESS_KEY="..."
+
+export WEBSITE_BUCKET_ENDPOINT_URL="..."
+export WEBSITE_BUCKET_NAME="..."
+export WEBSITE_BUCKET_ACCESS_KEY_ID="..."
+export WEBSITE_BUCKET_SECRECT_ACCESS_KEY="..."
+export CLOUDFLARE_API_TOKEN="..."
 ```
 
 ### Build
