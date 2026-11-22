@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://software.psion.info/api/v1/programs.schema.json",
+  "$id": "https://software.psion.community/api/v1/programs.schema.json",
   "title": "Programs",
   "description": "Hierarchical grouped listing of all programs.",
   "type": "array",

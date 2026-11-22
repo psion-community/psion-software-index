@@ -57,7 +57,7 @@ def main():
         if not program_kinds.issuperset(kinds):
             continue
         print(program["name"])
-        print(f"    https://software.psion.info/programs/{program['uid']}")
+        print(f"    https://software.psion.community/programs/{program['uid']}")
 
 
 if __name__ == "__main__":
