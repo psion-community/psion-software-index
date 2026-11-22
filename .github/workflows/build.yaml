@@ -119,6 +119,13 @@ jobs:
         path: site/_data/summary.json
         if-no-files-found: error
 
+    - name: Archive the database
+      uses: actions/upload-artifact@v7
+      with:
+        name: summary
+        path: site/index.db
+        if-no-files-found: error
+
     - name: Build site
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

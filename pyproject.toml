@@ -21,6 +21,7 @@ dependencies = [
     "matplotlib",
     "natsort",
     "pillow",
+    "pysqlite3",
     "python-frontmatter",
     "pyyaml",
     "requests",

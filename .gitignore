@@ -15,6 +15,7 @@ __pycache__
 /site/files
 /site/icons
 /site/images/charts
+/site/index.db
 /site/screenshots
 /site/vendor
 dist/

@@ -321,6 +321,10 @@ class SnapshotSource(object):
         return self._metadata
 
     @property
+    def date(self):
+        return self.metadata.date
+
+    @property
     def title(self):
         if self.metadata.type == SnapshotType.WEBSITE:
             url_components = urlparse(self.metadata.url)
