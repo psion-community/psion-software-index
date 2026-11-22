@@ -205,8 +205,9 @@ class Release(object):
             'tags': sorted(list(self.tags)),
             'platform': self.platform,
             'runtimes': sorted(list(self.runtimes)),
-            'discovery_date': discovery_date,
         }
+        if discovery_date is not None:
+            dict['discovery_date'] = discovery_date
         if self.uid is not None:
             dict['uid'] = self.uid
         if self.version is not None:
