@@ -65,7 +65,8 @@
             }
         },
         "fingerprint": {"type": "string"},
-        "platform": {"enum": ["epoc16", "epoc32"]}
+        "platform": {"enum": ["epoc16", "epoc32"]},
+        "discovery_date": {"type": "string", "format": "date-time"}
     },
     "required": [
         "filename",
@@ -78,7 +79,8 @@
         "tags",
         "runtimes",
         "version",
-        "platform"
+        "platform",
+        "discovery_date"
     ],
     "additionalProperties": false
 }

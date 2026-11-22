@@ -207,7 +207,7 @@ class Release(object):
             'runtimes': sorted(list(self.runtimes)),
         }
         if discovery_date is not None:
-            dict['discovery_date'] = discovery_date
+            dict['discovery_date'] = discovery_date.isoformat()
         if self.uid is not None:
             dict['uid'] = self.uid
         if self.version is not None:
@@ -768,10 +768,10 @@ def group(library):
         os.remove(index_paths.database_path)
     with sqlite3.connect(index_paths.database_path) as connection:
         cursor = connection.cursor()
-        cursor.execute("CREATE TABLE releases(name, version, sha256, uid, discovery_date)")
+        cursor.execute("CREATE TABLE releases(name, version, sha256, uid, discovery_date, platform, size)")
         for release in releases:
-            cursor.execute("INSERT INTO releases VALUES (?, ?, ?, ?, ?)",
-                           (release["name"], release["version"], release["sha256"], release["uid"] if "uid" in release else None, release["discovery_date"]))
+            cursor.execute("INSERT INTO releases VALUES (?, ?, ?, ?, ?, ?, ?)",
+                           (release["name"], release["version"], release["sha256"], release["uid"] if "uid" in release else None, release["discovery_date"], release["platform"], release["size"]))
 
     logging.info("Writing summary to '%s'...", index_paths.summary_path)
     with open(index_paths.summary_path, "w") as fh:
