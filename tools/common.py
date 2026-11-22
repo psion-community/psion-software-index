@@ -83,14 +83,16 @@ class SnapshotMetadata:
     @classmethod
     def load(cls, fh):
         contents = json.load(fh)
-        date = contents["created"]
-        type = SnapshotType(contents["type"]) if "type" in contents else SnapshotType.WEBSITE
+        date = datetime.datetime.fromisoformat(contents["created"])
+        if date.tzinfo is None:
+            date = date.replace(tzinfo=datetime.timezone.utc)
+        snapshot_type = SnapshotType(contents["type"]) if "type" in contents else SnapshotType.WEBSITE
         url = contents["url"]
         identifier = contents["identifier"] if "identifier" in contents else None
         title = contents["title"]
         description = contents["description"] if "description" in contents else ""
 
-        snapshot = cls(type=type,
+        snapshot = cls(type=snapshot_type,
                        url=url,
                        identifier=identifier,
                        title=title,
@@ -319,6 +321,10 @@ class SnapshotSource(object):
                 with open(os.path.join(snapshot_path, "metadata.json")) as fh:
                     self._metadata = SnapshotMetadata.load(fh)
         return self._metadata
+
+    @property
+    def date(self):
+        return self.metadata.date
 
     @property
     def title(self):

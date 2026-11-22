@@ -43,7 +43,7 @@ class ExtractionTests(unittest.TestCase):
                                          reference=[],
                                          path=path,
                                          error_handler=error_handler)
-        release = installer.as_dict(relative_icons_path="icons")
+        release = installer.as_dict(relative_icons_path="icons", discovery_date=None)
         return (release, errors)
 
     def _import_application(self, path):
@@ -66,7 +66,7 @@ class ExtractionTests(unittest.TestCase):
                                            reference=[],
                                            path=path,
                                            error_handler=error_handler)
-        release = installer.as_dict(relative_icons_path="icons")
+        release = installer.as_dict(relative_icons_path="icons", discovery_date=None)
         return (release, errors)
 
     def test_installer_version(self):

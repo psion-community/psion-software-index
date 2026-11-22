@@ -67,6 +67,7 @@ if $RELEASE ; then
         --skip-if-empty \
         --push \
         --exec "${RELEASE_SCRIPT_PATH}" \
+        "$ROOT_DIRECTORY/site/index.db" \
         "$ROOT_DIRECTORY/site/_data/summary.json" \
         "$ROOT_DIRECTORY/site/_data/sources.json" \
         "$ROOT_DIRECTORY/site/_data/groups.json" \

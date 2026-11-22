@@ -28,6 +28,7 @@ import concurrent.futures
 import contextlib
 import copy
 import csv
+import datetime
 import functools
 import glob
 import hashlib
@@ -43,12 +44,14 @@ import tempfile
 import threading
 import urllib.parse
 
+from dataclasses import dataclass
 from enum import Enum
 
 import dotenv
 import frontmatter
 import jsonschema
 import natsort
+import sqlite3
 
 from PIL import Image as PILImage, ImageOps
 
@@ -190,7 +193,7 @@ class Release(object):
         self.platform = platform
         self.runtimes = runtimes_from_tags(tags)
 
-    def as_dict(self, relative_icons_path):
+    def as_dict(self, relative_icons_path, discovery_date):
         dict = {
             'filename': self.filename,
             'size': self.size,
@@ -203,6 +206,8 @@ class Release(object):
             'platform': self.platform,
             'runtimes': sorted(list(self.runtimes)),
         }
+        if discovery_date is not None:
+            dict['discovery_date'] = discovery_date.isoformat()
         if self.uid is not None:
             dict['uid'] = self.uid
         if self.version is not None:
@@ -499,50 +504,49 @@ def index_source(cache, source, source_index_directory):
         with open(source_manifest_path, "r") as fh:
             source_manifest = json.load(fh)
 
-    # Check the manifest to see if we need to index the source.
+    # Use the cached index if it matches.
     if (source_manifest["indexer_version"] == INDEXER_VERSION
         and source_manifest["hash"] == source_hash):
-
-        # Load the source index.
         logging.info("Loading cached source index...")
         with open(source_releases_path, "r") as fh:
-            source_releases = json.load(fh)
+            return json.load(fh)
 
-    else:
+    # Otherwise; index.
 
-        # Prepare the source index directory.
-        utils.reset_directory(source_index_directory)
-        utils.create_directories([
-            source_index_files_directory,
-            source_index_icons_directory,
-            source_index_errors_directory
-        ])
+    # Prepare the source index directory.
+    utils.reset_directory(source_index_directory)
+    utils.create_directories([
+        source_index_files_directory,
+        source_index_icons_directory,
+        source_index_errors_directory
+    ])
 
-        source_releases = import_source(cache=cache,
-                                        source=source,
-                                        output_directory=source_index_files_directory,
-                                        error_handler=error_handler(source_index_errors_directory))
+    source_releases = import_source(cache=cache,
+                                    source=source,
+                                    output_directory=source_index_files_directory,
+                                    error_handler=error_handler(source_index_errors_directory))
 
-        logging.info("Writing manifest to '%s'...", source_manifest_path)
-        with open(source_manifest_path, "w") as fh:
-            json.dump({
-                "identifier": source.identifier,
-                "hash": source.hash,
-                "indexer_version": INDEXER_VERSION,
-            }, fh, indent=4)
+    logging.info("Writing manifest to '%s'...", source_manifest_path)
+    with open(source_manifest_path, "w") as fh:
+        json.dump({
+            "identifier": source.identifier,
+            "hash": source.hash,
+            "indexer_version": INDEXER_VERSION,
+        }, fh, indent=4)
 
-        # Write the source index.
-        logging.info("Writing source index to '%s'...", source_releases_path)
-        with open(source_releases_path, "w") as fh:
-            json.dump([release.as_dict(relative_icons_path="icons") for release in source_releases], fh, indent=4)
+    # Write the source index.
+    logging.info("Writing source index to '%s'...", source_releases_path)
+    with open(source_releases_path, "w") as fh:
+        json.dump([release.as_dict(relative_icons_path="icons", discovery_date=source.date) for release in source_releases], fh, indent=4)
 
-        # Write out the icons.
-        logging.info("Writing icons to '%s'...", source_index_icons_directory)
-        for release in source_releases:
-            release.write_assets(source_index_icons_directory)
+    # Write out the icons.
+    logging.info("Writing icons to '%s'...", source_index_icons_directory)
+    for release in source_releases:
+        release.write_assets(source_index_icons_directory)
 
-        # Convert the releases to a dictionary.
-        source_releases = [release.as_dict(relative_icons_path="icons") for release in source_releases]
+    # Read the newly created file.
+    with open(source_releases_path, "r") as fh:
+        source_releases = json.load(fh)
 
     return source_releases
 
@@ -614,7 +618,6 @@ def index(library):
             releases += future.result()
 
     # Merge the source files.
-    # TODO: We have to get better at path generation. Perhaps a class initialized with a root path?
     for source in library.sources:
         source_index_directory = os.path.join(library.intermediates_directory, "sources", source.identifier)
         source_index_files_directory = os.path.join(source_index_directory, "files")
@@ -653,18 +656,29 @@ class IndexPaths(object):
         self.sources_path = os.path.join(self.root_directory, "sources.json")
         self.summary_path = os.path.join(self.root_directory, "summary.json")
         self.redirects_path = os.path.join(self.root_directory, "redirects.json")
+        self.database_path = os.path.join(root_directory, "index.db")
+
+
+@dataclass
+class IntermediatePaths:
+    root_directory: str
+    releases_path: str
+    files_directory: str
+    icons_directory: str
+
+    def __init__(self, root_directory):
+        self.root_directory = root_directory
+        self.releases_path = os.path.join(root_directory, "releases.json")
+        self.files_directory = os.path.join(root_directory, "files")
+        self.icons_directory = os.path.join(root_directory, "icons")
 
 
 def group(library):
     index_paths = IndexPaths(library.index_directory)
-
-    # TODO: Move into library.
-    intermediate_releases_path = os.path.join(library.intermediates_directory, "releases.json")
-    intermediate_files_directory = os.path.join(library.intermediates_directory, "files")
-    intermediate_icons_directory = os.path.join(library.intermediates_directory, "icons")
+    intermediate_paths = IntermediatePaths(library.intermediates_directory)
 
     # Load the releases.
-    with open(intermediate_releases_path) as fh:
+    with open(intermediate_paths.releases_path) as fh:
         releases = json.load(fh)
 
     # Fix-up the version to match the current API expectations. Ultimately we will want to expose this to the API.
@@ -691,6 +705,19 @@ def group(library):
     # This is used to generate the top-level listing and the standalone /programs API end-point.
     # We also generate the legacy redirects here to ensure old URLs aren't broken.
     blocked_identifiers = set(library.blocked_identifiers)
+
+    @dataclass
+    class ReleaseGroup:
+        releases: [dict]
+        discovery_date: datetime.datetime
+
+        def __init__(self):
+            self.releases = []
+            self.discovery_date = datetime.datetime.now(datetime.timezone.utc)
+
+        def add_release(self, release):
+            self.releases.append(release)
+
     program_groups = collections.defaultdict(list)
     redirects = {}
     for release in releases:
@@ -735,6 +762,17 @@ def group(library):
     # Create the output directory.
     os.makedirs(library.index_directory, exist_ok=True)
 
+    # Create an SQLite database with all the releases.
+    logging.info("Creating database...")
+    if os.path.exists(index_paths.database_path):
+        os.remove(index_paths.database_path)
+    with sqlite3.connect(index_paths.database_path) as connection:
+        cursor = connection.cursor()
+        cursor.execute("CREATE TABLE releases(name, version, sha256, uid, discovery_date, platform, size)")
+        for release in releases:
+            cursor.execute("INSERT INTO releases VALUES (?, ?, ?, ?, ?, ?, ?)",
+                           (release["name"], release["version"], release["sha256"], release["uid"] if "uid" in release else None, release["discovery_date"], release["platform"], release["size"]))
+
     logging.info("Writing summary to '%s'...", index_paths.summary_path)
     with open(index_paths.summary_path, "w") as fh:
         json.dump(summary, fh)
@@ -758,13 +796,13 @@ def group(library):
     logging.info("Copying files to '%s'...", index_paths.files_directory)
     if os.path.exists(index_paths.files_directory):
         shutil.rmtree(index_paths.files_directory)
-    shutil.copytree(intermediate_files_directory, index_paths.files_directory)
+    shutil.copytree(intermediate_paths.files_directory, index_paths.files_directory)
 
     # Copy the icons.
     logging.info("Copying icons to '%s'...", index_paths.icons_directory)
     if os.path.exists(index_paths.icons_directory):
         shutil.rmtree(index_paths.icons_directory)
-    shutil.copytree(intermediate_icons_directory, index_paths.icons_directory)
+    shutil.copytree(intermediate_paths.icons_directory, index_paths.icons_directory)
 
 
 def overlay(library):
@@ -776,6 +814,7 @@ def overlay(library):
     screenshots_output_path = os.path.join(library.output_directory, "screenshots")
     files_output_path = os.path.join(library.output_directory, "files")
     icons_output_path = os.path.join(library.output_directory, "icons")
+    database_output_path = os.path.join(library.output_directory, "index.db")
     api_v1_output_path = os.path.join(library.output_directory, "api", "v1")
 
     destination_programs_path = os.path.join(data_output_path, "programs.json")
@@ -942,6 +981,7 @@ def overlay(library):
     # Copy the files and icons.
     shutil.copytree(index_paths.files_directory, files_output_path)
     shutil.copytree(index_paths.icons_directory, icons_output_path)
+    shutil.copyfile(index_paths.database_path, database_output_path)
 
     # Write the API.
     os.makedirs(api_v1_output_path, exist_ok=True)
