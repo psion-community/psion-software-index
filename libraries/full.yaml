@@ -422,3 +422,5 @@ sources:
   sha256: c712984e963bad3a6a0c4b52b6049b1ebe2e189e11e9a53d5cebea7686de6bda
 - path: 2026-11-22-00-36-58-internet-archive-tucows_26000_S5-Trans.tar.gz
   sha256: 53c0ae62799af8de2101a4d33e8f0747c2a7337b3ba46f57b0d99a41bee9d369
+- path: 2026-11-22-17-33-16-website-mochasoft.dk.tar.gz
+  sha256: 75880f2f3e901b2921143d8546f7fcd9e854df7fda83688b6b9ecda789577171
