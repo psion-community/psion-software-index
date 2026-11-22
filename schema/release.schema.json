@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://software.psion.info/api/v1/release.schema.json",
+    "$id": "https://software.psion.community/api/v1/release.schema.json",
     "title": "Release",
     "description": "Individual instances of an installable program; either a .app, .opa, or .sis.",
     "type": "object",

@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://software.psion.info/api/v1/program.schema.json",
+    "$id": "https://software.psion.community/api/v1/program.schema.json",
     "title": "Program",
     "description": "Single program representing a group of versions and variants.",
     "type": "object",

@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://software.psion.info/api/v1/groups.schema.json",
+    "$id": "https://software.psion.community/api/v1/groups.schema.json",
     "title": "Program Groups",
     "description": "Top-level grouping for individual programs.",
     "type": "array",

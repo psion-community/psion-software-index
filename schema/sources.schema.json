@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://software.psion.info/api/v1/sources.schema.json",
+    "$id": "https://software.psion.community/api/v1/sources.schema.json",
     "title": "Sources",
     "description": "Array of sources used to generate the index.",
     "type": "array",
