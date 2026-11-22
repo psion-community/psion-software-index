@@ -30,6 +30,3 @@ We generate an SQLite database as part of the indexing process. While the schema
   };
 })();
 </script>
-
-> [!WARNING]
-> The API is currently a work in progress and should not be considered stable.
