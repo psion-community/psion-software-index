@@ -48,6 +48,10 @@ export default {
             const headers = new Headers();
             obj.writeHttpMetadata(headers);
             headers.set("etag", obj.httpEtag);
+
+            if (path.startsWith("files/")) {
+                headers.set("x-robots-tag", "noindex");
+            }
             return new Response(req.method === "HEAD" ? null : obj.body, { headers });
         }
 
