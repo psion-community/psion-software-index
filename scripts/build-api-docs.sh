@@ -33,4 +33,4 @@ SITE_DIRECTORY="$ROOT_DIRECTORY/site"
 
 # Generate the API documentation.
 mkdir -p "$SITE_DIRECTORY/api/docs"
-npx widdershins --expandBody --resolve --code "$SCHEMA_DIRECTORY/api.yaml" --summary -o "$SITE_DIRECTORY/api/docs/index.md"
+npx --no -- redocly build-docs "$SCHEMA_DIRECTORY/api.yaml" -o "$SITE_DIRECTORY/api/docs/index.html"
