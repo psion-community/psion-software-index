@@ -70,6 +70,19 @@ jobs:
       run: |
         scripts/test.sh
 
+    - name: Create intermediate directories
+      run: |
+        mkdir -p "$INDEXER_ASSETS_DIRECTORY"
+        mkdir -p "$INDEXER_INTERMEDIATES_DIRECTORY"
+        mkdir -p "$INDEXER_CACHE_DIRECTORY"
+
+    - name: Clean
+      if: github.event_name == 'schedule' || inputs.clean
+      env:
+        TMPDIR: ${{ runner.temp }}
+      run: |
+        uv run indexer libraries/full.yaml clean
+
     - name: Sync
       env:
         SNAPSHOTS_BUCKET_ENDPOINT_URL: ${{ secrets.SNAPSHOTS_BUCKET_ENDPOINT_URL }}
@@ -78,17 +91,7 @@ jobs:
         SNAPSHOTS_BUCKET_SECRET_ACCESS_KEY: ${{ secrets.SNAPSHOTS_BUCKET_SECRET_ACCESS_KEY }}
         TMPDIR: ${{ runner.temp }}
       run: |
-        mkdir -p "$INDEXER_ASSETS_DIRECTORY"
-        mkdir -p "$INDEXER_INTERMEDIATES_DIRECTORY"
-        mkdir -p "$INDEXER_CACHE_DIRECTORY"
         uv run indexer libraries/full.yaml sync
-
-    - name: Clean
-      if: github.event_name == 'schedule' || inputs.clean
-      env:
-        TMPDIR: ${{ runner.temp }}
-      run: |
-        uv run indexer libraries/full.yaml clean
 
     - name: Index
       env:
