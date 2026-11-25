@@ -8,8 +8,8 @@ on:
   schedule:
     - cron: '0 14 * * 1'  # 04:00 Monday, HST.
   workflow_dispatch:
-    clean:
-      inputs:
+    inputs:
+      clean:
         description: "Clean"
         type: boolean
         default: false
