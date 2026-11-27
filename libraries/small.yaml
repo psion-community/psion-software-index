@@ -13,6 +13,6 @@ overlays:
 - ../overlays
 assets_directory: ../_assets
 index_directory: ../_indexes/small/index
-filetree_directory: ../_indexes/small/filetree
+treeindex_directory: ../_indexes/small/treeindex
 intermediates_directory: ../_indexes/small/intermediates
 output_directory: ../site

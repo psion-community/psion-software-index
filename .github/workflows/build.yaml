@@ -31,8 +31,9 @@ jobs:
       MISE_DATA_DIR: ${{ github.workspace }}/.mise/data
       MISE_STATE_DIR: ${{ github.workspace }}/.mise/state
       INDEXER_ASSETS_DIRECTORY: /home/github-runner/psion-software-index/assets
-      INDEXER_INTERMEDIATES_DIRECTORY: /home/github-runner/psion-software-index/intermediates
       INDEXER_CACHE_DIRECTORY: /home/github-runner/psion-software-index/cache
+      INDEXER_INTERMEDIATES_DIRECTORY: /home/github-runner/psion-software-index/intermediates
+      INDEXER_TREEINDEX_DIRECTORY: /home/github-runner/psion-software-index/treeindex
 
     steps:
 
@@ -73,8 +74,9 @@ jobs:
     - name: Create intermediate directories
       run: |
         mkdir -p "$INDEXER_ASSETS_DIRECTORY"
-        mkdir -p "$INDEXER_INTERMEDIATES_DIRECTORY"
         mkdir -p "$INDEXER_CACHE_DIRECTORY"
+        mkdir -p "$INDEXER_INTERMEDIATES_DIRECTORY"
+        mkdir -p "$INDEXER_TREEINDEX_DIRECTORY"
 
     - name: Clean
       if: github.event_name == 'schedule' || inputs.clean
@@ -98,6 +100,12 @@ jobs:
         TMPDIR: ${{ runner.temp }}
       run: |
         uv run indexer libraries/full.yaml index
+
+    - name: Tree Index
+      env:
+        TMPDIR: ${{ runner.temp }}
+      run: |
+        uv run indexer libraries/full.yaml treeindex
 
     - name: Group
       env:
@@ -127,6 +135,13 @@ jobs:
       with:
         name: database
         path: site/index.db
+        if-no-files-found: error
+
+    - name: Archive the treeindex
+      uses: actions/upload-artifact@v7
+      with:
+        name: treeindex-summary
+        path: "${{ env.INDEXER_TREEINDEX_DIRECTORY }}/summary.txt"
         if-no-files-found: error
 
     - name: Build site

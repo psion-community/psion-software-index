@@ -551,11 +551,11 @@ def index_source(cache, source, source_index_directory):
     return source_releases
 
 
-def import_filetree(item):
+def import_treeindex(item):
     results = []
     if item.children:
         for child in item.children:
-            results.extend(import_filetree(child))
+            results.extend(import_treeindex(child))
     else:
         extension = item.get_extension()
         if extension in [".app", ".opa"]:
@@ -565,31 +565,46 @@ def import_filetree(item):
     return results
 
 
-def filetree(library):
-    logging.info("Generating filetree...")
-    os.makedirs(library.filetree_directory, exist_ok=True)
+def treeindex(library):
+    logging.info("Generating treeindex...")
+    os.makedirs(library.treeindex_directory, exist_ok=True)
+    summary_path = os.path.join(library.treeindex_directory, "summary.txt")
 
     source_roots = []
     for source in library.sources:
-        index_path = os.path.join(library.filetree_directory, source.identifier)
+        index_path = os.path.join(library.treeindex_directory, source.identifier)
         tree_path = os.path.join(index_path, "tree")
-        cache_path = os.path.join(index_path, "cache")
-        os.makedirs(cache_path, exist_ok=True)
-        root = containers.get_contents(source.path, cache_path)
+        output_directory = os.path.join(index_path, "files")
+        output_directory = None  # TODO: Remove to write files to a flat directory structure for further processing.
+        if output_directory is not None:
+            os.makedirs(output_directory, exist_ok=True)
+        root = containers.get_contents(library.extraction_cache, source.path, output_directory=output_directory)
         with open(tree_path, "wb") as fh:
             pickle.dump(root, fh)
         source_roots.append(root)
-        results = import_filetree(root)
-        for result in results:
-            print(result)
-        print(len(results))
 
     library_root = containers.Item(type=containers.ItemType.LIBRARY,
                                    name="Psion Software Index",
                                    identifier=None,
                                    children=source_roots)
-    with open(os.path.join(library.filetree_directory, "tree"), "wb") as fh:
+
+    # Detect programs.
+    unique_program_names = set(import_treeindex(library_root))
+
+    with open(os.path.join(library.treeindex_directory, "tree"), "wb") as fh:
         pickle.dump(library_root, fh)
+
+    with open(summary_path, "w") as fh:
+
+        fh.write("Tree\n")
+        fh.write("====\n\n")
+        root.write_summary(fh)
+        fh.write("\n")
+
+        fh.write("Unique Program Filenames\n")
+        fh.write("========================\n\n")
+        for program in unique_program_names:
+            fh.write(program + "\n")
 
 
 def index(library):
@@ -1018,7 +1033,7 @@ def overlay(library):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("definition")
-    parser.add_argument("command", choices=["clean", "sync", "index", "filetree", "group", "overlay"], nargs="+", help="command to run")
+    parser.add_argument("command", choices=["clean", "sync", "index", "treeindex", "group", "overlay"], nargs="+", help="command to run")
     parser.add_argument('--verbose', '-v', action='store_true', default=False, help="show verbose output")
     options = parser.parse_args()
 
@@ -1033,8 +1048,8 @@ def main():
             library.sync()
         elif command == "index":
             index(library)
-        elif command == "filetree":
-            filetree(library)
+        elif command == "treeindex":
+            treeindex(library)
         elif command == "group":
             group(library)
         elif command == "overlay":

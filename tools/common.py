@@ -160,7 +160,7 @@ class Library(object):
         self.assets_directory = prefer_environment_variable("assets_directory")
         self.intermediates_directory = prefer_environment_variable("intermediates_directory")
         self.index_directory = prefer_environment_variable("index_directory")
-        self.filetree_directory = prefer_environment_variable("filetree_directory")
+        self.treeindex_directory = prefer_environment_variable("treeindex_directory")
         self.output_directory = prefer_environment_variable("output_directory")
         self.sources = [SnapshotSource(self.extraction_cache, self.assets_directory, details)
                         for details in self._configuration['sources']]
