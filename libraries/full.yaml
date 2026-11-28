@@ -20,7 +20,7 @@ blocked_identifiers:
 - uid/0x783d4552
 assets_directory: ../_assets
 index_directory: ../_indexes/full/index
-filetree_directory: ../_indexes/full/filetree
+treeindex_directory: ../_indexes/full/treeindex
 intermediates_directory: ../_indexes/full/intermediates
 output_directory: ../site
 overlays:

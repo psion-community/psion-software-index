@@ -66,6 +66,11 @@ class Item(object):
         _, ext = os.path.splitext(self.name)
         return ext.lower()
 
+    def write_summary(self, fh, indent=0):
+        fh.write(f"{" " * indent}{self.name}\n")
+        for child in self.children:
+            child.write_summary(fh, indent=indent+2)
+
 
 def run_command(command):
     """
@@ -188,13 +193,13 @@ class Extractor(object):
         self.temporary_directory.cleanup()
 
 
-def get_child_items(path, cache_path):
-    return [get_contents(os.path.join(path, file), cache_path)
+def get_child_items(cache, path, output_directory):
+    return [get_contents(cache, os.path.join(path, file), output_directory)
             for file in os.listdir(path)
             if not file.startswith(".")]
 
 
-def get_contents(path, cache_path):
+def get_contents(cache, path, output_directory):
     path = os.path.abspath(path)
 
     # First check for regular directories.
@@ -202,17 +207,21 @@ def get_contents(path, cache_path):
         return Item(type=ItemType.DIRECTORY,
                     name=os.path.basename(path),
                     identifier=None,
-                    children=get_child_items(path, cache_path))
+                    children=get_child_items(cache, path, output_directory))
 
     # Next try indexing known containers.
-    extractor = get_extractor(path)
+    extractor = cache.extractor(path)
     identifier = utils.shasum(path)
     name = os.path.basename(path)
-    shutil.copyfile(path, os.path.join(cache_path, identifier))
+
+    # Copy the file to the output path if requested.
+    if output_directory is not None:
+        shutil.copyfile(path, os.path.join(output_directory, identifier))
+
     if extractor is not None:
         try:
             with extractor as container_path:
-                children = get_child_items(container_path, cache_path)
+                children = get_child_items(cache, container_path, output_directory)
                 return Item(type=ItemType.CONTAINER,
                             name=name,
                             identifier=identifier,
