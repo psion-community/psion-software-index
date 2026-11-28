@@ -575,9 +575,8 @@ def treeindex(library):
         index_path = os.path.join(library.treeindex_directory, source.identifier)
         tree_path = os.path.join(index_path, "tree")
         output_directory = os.path.join(index_path, "files")
+        os.makedirs(output_directory, exist_ok=True)
         output_directory = None  # TODO: Remove to write files to a flat directory structure for further processing.
-        if output_directory is not None:
-            os.makedirs(output_directory, exist_ok=True)
         root = containers.get_contents(library.extraction_cache, source.path, output_directory=output_directory)
         with open(tree_path, "wb") as fh:
             pickle.dump(root, fh)
