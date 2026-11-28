@@ -597,7 +597,7 @@ def treeindex(library):
 
         fh.write("Tree\n")
         fh.write("====\n\n")
-        root.write_summary(fh)
+        library_root.write_summary(fh)
         fh.write("\n")
 
         fh.write("Unique Program Filenames\n")
